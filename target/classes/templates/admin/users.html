@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng - Notion Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            margin: 5px 15px;
+            padding: 12px 20px;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .btn-admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-admin:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            color: white;
+        }
+        .role-badge {
+            font-size: 0.75rem;
+            margin-right: 0.25rem;
+        }
+        .pagination {
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+            <div class="position-sticky pt-3">
+                <div class="text-center mb-4">
+                    <h4 class="text-white">Notion Admin</h4>
+                    <small class="text-white-50">Hệ thống quản lý</small>
+                </div>
+
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/admin/users}">
+                            <i class="fas fa-users me-2"></i>
+                            Quản lý người dùng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Templates
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Báo cáo
+                        </a>
+                    </li>
+                </ul>
+
+                <hr class="my-3" style="border-color: rgba(255,255,255,0.2);">
+
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/logout}">
+                            <i class="fas fa-sign-out-alt me-2"></i>
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
+            <!-- Header -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-users me-2"></i>
+                    Quản lý người dùng
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a th:href="@{/admin}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Về Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Danh sách người dùng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Tên hiển thị</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${usersPage == null or #lists.isEmpty(usersPage.content)}">
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-users fa-3x mb-3"></i>
+                                    <br>
+                                    Không có người dùng nào
+                                </td>
+                            </tr>
+
+                            <tr th:each="user : ${usersPage.content}">
+                                <td th:text="${user.id}">1</td>
+                                <td th:text="${user.email}">user@example.com</td>
+                                <td th:text="${user.displayName ?: 'N/A'}">John Doe</td>
+                                <td>
+                                    <div th:if="${user.admin}">
+                                        <span class="badge bg-danger role-badge">ADMIN</span>
+                                    </div>
+                                    <div th:if="${user.seller}">
+                                        <span class="badge bg-warning role-badge">SELLER</span>
+                                    </div>
+                                    <div th:unless="${user.admin or user.seller}">
+                                        <span class="badge bg-secondary role-badge">USER</span>
+                                    </div>
+                                </td>
+                                <td>
+                                            <span th:class="'badge ' + ${user.status == T(com.wana.notion.entity.user.UserStatus).ACTIVE ? 'bg-success' : 'bg-danger'}"
+                                                  th:text="${user.status}">ACTIVE</span>
+                                </td>
+                                <td th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <!-- Admin Role Actions -->
+                                        <button th:unless="${user.admin or user.email == 'admin@notion.com'}"
+                                                type="button"
+                                                class="btn btn-outline-success btn-sm"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#assignAdminModal' + ${user.id}">
+                                            <i class="fas fa-user-shield"></i>
+                                        </button>
+
+                                        <!-- Seller Role Actions -->
+                                        <button th:unless="${user.seller}"
+                                                type="button"
+                                                class="btn btn-outline-warning btn-sm"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#promoteSellerModal' + ${user.id}">
+                                            <i class="fas fa-store"></i>
+                                        </button>
+
+                                        <button th:if="${user.seller}"
+                                                type="button"
+                                                class="btn btn-outline-secondary btn-sm"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#demoteSellerModal' + ${user.id}">
+                                            <i class="fas fa-user-minus"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Assign Admin Modal -->
+                                    <div class="modal fade"
+                                         th:id="'assignAdminModal' + ${user.id}"
+                                         tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Cấp quyền Admin</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Bạn có chắc chắn muốn cấp quyền Admin cho người dùng
+                                                    <strong th:text="${user.email}">email</strong>?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                    <form th:action="@{/admin/assign-admin}" method="post" style="display: inline;">
+                                                        <input type="hidden" name="userId" th:value="${user.id}">
+                                                        <button type="submit" class="btn btn-success">Cấp quyền</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Promote to Seller Modal -->
+                                    <div class="modal fade"
+                                         th:id="'promoteSellerModal' + ${user.id}"
+                                         tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Thăng cấp Seller</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Bạn có chắc chắn muốn thăng cấp người dùng
+                                                    <strong th:text="${user.email}">email</strong> lên Seller?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                    <form th:action="@{/admin/promote-seller}" method="post" style="display: inline;">
+                                                        <input type="hidden" name="userId" th:value="${user.id}">
+                                                        <button type="submit" class="btn btn-warning">Thăng cấp</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Demote Seller Modal -->
+                                    <div class="modal fade"
+                                         th:id="'demoteSellerModal' + ${user.id}"
+                                         tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Hạ cấp Seller</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Bạn có chắc chắn muốn hạ cấp Seller
+                                                    <strong th:text="${user.email}">email</strong> xuống User thường?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                    <form th:action="@{/admin/demote-seller}" method="post" style="display: inline;">
+                                                        <input type="hidden" name="userId" th:value="${user.id}">
+                                                        <button type="submit" class="btn btn-secondary">Hạ cấp</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav th:if="${usersPage.totalPages > 1}" aria-label="User pagination">
+                        <ul class="pagination">
+                            <li class="page-item" th:classappend="${usersPage.first} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/admin/users(page=${usersPage.number - 1}, size=${usersPage.size})}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            <li th:each="pageNum : ${#numbers.sequence(0, usersPage.totalPages - 1)}"
+                                th:if="${pageNum >= usersPage.number - 2 and pageNum <= usersPage.number + 2}"
+                                class="page-item"
+                                th:classappend="${pageNum == usersPage.number} ? 'active' : ''">
+                                <a class="page-link"
+                                   th:href="@{/admin/users(page=${pageNum}, size=${usersPage.size})}"
+                                   th:text="${pageNum + 1}">1</a>
+                            </li>
+
+                            <li class="page-item" th:classappend="${usersPage.last} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/admin/users(page=${usersPage.number + 1}, size=${usersPage.size})}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <!-- Pagination Info -->
+                    <div th:if="${usersPage.totalElements > 0}" class="d-flex justify-content-between align-items-center mt-3">
+                        <small class="text-muted">
+                            Hiển thị <strong th:text="${usersPage.number * usersPage.size + 1}">1</strong>
+                            đến <strong th:text="${usersPage.number * usersPage.size + usersPage.numberOfElements}">10</strong>
+                            trong tổng số <strong th:text="${usersPage.totalElements}">100</strong> người dùng
+                        </small>
+                        <small class="text-muted">
+                            Trang <strong th:text="${usersPage.number + 1}">1</strong>
+                            / <strong th:text="${usersPage.totalPages}">10</strong>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
